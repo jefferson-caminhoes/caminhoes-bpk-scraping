@@ -140,6 +140,21 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  probe-worker:
+    build: .
+    command: python -m src.main probe
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/caminhoes_bpk
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: phi3:mini
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    restart: unless-stopped
+
   scheduler:
     build: .
     command: python -m src.main scheduler

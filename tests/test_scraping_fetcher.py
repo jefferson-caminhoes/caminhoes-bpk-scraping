@@ -113,3 +113,89 @@ def test_default_http_adapter_resolves_url():
     )
     assert "12345" in url
     assert "12.345.678" in url
+
+
+def test_fetch_scraping_target_loads_site_probe():
+    """site_probe stored in stakeholder doc is parsed into ScrapingTarget.site_probe."""
+    probe_dict = {
+        "portal_type": "simple_get",
+        "original_url": "https://portal.gov.br",
+        "base_url": "https://portal.gov.br",
+        "auth_required": False,
+        "captcha_detected": False,
+        "login_url": None,
+        "steps": [
+            {
+                "step": 1,
+                "type": "get",
+                "url": "{base_url}/consulta?p={protocol_number}",
+                "headers": {},
+                "form_data": {},
+                "json_body": None,
+                "extract": [],
+                "result_selector": None,
+                "is_result_step": True,
+            }
+        ],
+        "confidence": 0.85,
+        "notes": "simple GET portal",
+        "analyzed_at": "2026-05-21T00:00:00+00:00",
+    }
+    mock_db = _make_mock_db(
+        protocol={
+            "_id": "prot_1",
+            "protocol_number": "12345",
+            "cnpj": "12.345.678/0001-99",
+            "monitoring_enabled": True,
+            "active": True,
+            "closed_manually": False,
+            "stakeholder_id": "stake_1",
+        },
+        stakeholder={
+            "_id": "stake_1",
+            "name": "Portal Gov",
+            "query_url_template": "https://portal.gov.br/consulta?p={protocol_number}",
+            "requires_javascript": False,
+            "has_captcha": False,
+            "type": "default",
+            "active": True,
+            "adapter_type": "dynamic",
+            "site_probe": probe_dict,
+        },
+    )
+
+    target = fetch_scraping_target(mock_db, "prot_1", "stake_1")
+
+    assert target.site_probe is not None
+    assert target.site_probe.portal_type == "simple_get"
+    assert target.site_probe.confidence == 0.85
+
+
+def test_fetch_scraping_target_ignores_invalid_site_probe():
+    """Invalid site_probe dict should not raise — target should be returned without probe."""
+    mock_db = _make_mock_db(
+        protocol={
+            "_id": "prot_1",
+            "protocol_number": "12345",
+            "cnpj": None,
+            "monitoring_enabled": True,
+            "active": True,
+            "closed_manually": False,
+            "stakeholder_id": "stake_1",
+        },
+        stakeholder={
+            "_id": "stake_1",
+            "name": "Broken Portal",
+            "query_url_template": "https://example.com/consulta?p={protocol_number}",
+            "requires_javascript": False,
+            "has_captcha": False,
+            "type": "default",
+            "active": True,
+            "adapter_type": "dynamic",
+            "site_probe": {"invalid_field": "bad data"},
+        },
+    )
+
+    target = fetch_scraping_target(mock_db, "prot_1", "stake_1")
+
+    assert target.site_probe is None

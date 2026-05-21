@@ -11,6 +11,7 @@ QUEUES = [
     "ai.extraction.jobs",
     "ai.extraction.results",
     "failed.jobs",
+    "probe.jobs",
 ]
 
 _MAX_RETRIES = 10

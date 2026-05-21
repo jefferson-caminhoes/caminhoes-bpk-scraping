@@ -7,6 +7,7 @@ WORKERS = {
     "scraping": "src.scraping.worker",
     "ai": "src.ai.worker",
     "scheduler": "src.scheduler.scheduler",
+    "probe": "src.workers.probe_worker",
 }
 
 

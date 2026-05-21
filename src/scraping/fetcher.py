@@ -1,7 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from bson import ObjectId
 from pymongo.database import Database
 from src.scraping.adapters.registry import get_adapter
+from src.scraping.probe_schema import SiteProbe
 
 
 def _oid(val):
@@ -28,6 +29,7 @@ class ScrapingTarget:
     has_captcha: bool
     resolved_url: str
     registry_office_number: str | None = None
+    site_probe: SiteProbe | None = None
 
 
 def _infer_adapter_key(stakeholder: dict) -> str:
@@ -73,6 +75,14 @@ def fetch_scraping_target(
     if not template:
         raise ValueError(f"Stakeholder {stakeholder_id} has no query_url_template")
 
+    site_probe: SiteProbe | None = None
+    probe_raw = stakeholder.get("site_probe")
+    if probe_raw and isinstance(probe_raw, dict):
+        try:
+            site_probe = SiteProbe(**probe_raw)
+        except Exception:
+            pass  # invalid probe — continue without it
+
     adapter_key = _infer_adapter_key(stakeholder)
     adapter = get_adapter(adapter_key)
     resolved_url = adapter.resolve_url(
@@ -99,4 +109,5 @@ def fetch_scraping_target(
             or protocol.get("serventia")
             or protocol.get("oficio")
         ),
+        site_probe=site_probe,
     )

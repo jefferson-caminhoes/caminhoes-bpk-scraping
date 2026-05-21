@@ -4,6 +4,7 @@ from src.database.repositories.scraped_contents import ScrapedContentsRepository
 from src.database.repositories.consultation_jobs import ConsultationJobsRepository
 from src.queues.consumer import consume
 from src.queues.publisher import publish_message
+from src.scraping.adapters.dynamic import DynamicAdapter
 from src.scraping.adapters.registry import get_adapter
 from src.scraping.fetcher import fetch_scraping_target
 from src.scraping.http_scraper import scrape_url
@@ -42,7 +43,10 @@ def handle_scraping_job(payload: dict, method) -> None:
         target = fetch_scraping_target(db, protocol_id, stakeholder_id, job_id)
         logger.info(f"Scraping {target.resolved_url} for job {job_id}")
 
-        adapter = get_adapter(target.adapter_type)
+        if target.adapter_type == "dynamic" and target.site_probe is not None:
+            adapter = DynamicAdapter(target.site_probe)
+        else:
+            adapter = get_adapter(target.adapter_type)
         result = adapter.scrape(target) or scrape_url(target.resolved_url)
 
         if not result.success:
