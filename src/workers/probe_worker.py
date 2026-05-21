@@ -17,12 +17,13 @@ def _oid(val):
 
 
 def handle_probe_job(payload: dict, method) -> None:
+    channel = get_channel()
     stakeholder_id = payload.get("stakeholder_id", "")
     url = payload.get("url", "")
 
     if not stakeholder_id or not url:
         logger.error(f"probe.jobs payload inválido: {payload}")
-        get_channel().basic_ack(delivery_tag=method.delivery_tag)
+        channel.basic_ack(delivery_tag=method.delivery_tag)
         return
 
     db = get_db()
@@ -52,7 +53,7 @@ def handle_probe_job(payload: dict, method) -> None:
             pass
 
     finally:
-        get_channel().basic_ack(delivery_tag=method.delivery_tag)
+        channel.basic_ack(delivery_tag=method.delivery_tag)
 
 
 def run():

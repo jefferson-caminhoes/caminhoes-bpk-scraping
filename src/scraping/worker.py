@@ -17,6 +17,7 @@ logger = get_logger(__name__)
 def handle_scraping_job(payload: dict, method) -> None:
     from src.queues.connection import get_channel
 
+    channel = get_channel()
     job_id = payload.get("job_id", "")
     protocol_id = payload.get("protocol_id", "")
     stakeholder_id = payload.get("stakeholder_id", "")
@@ -30,7 +31,7 @@ def handle_scraping_job(payload: dict, method) -> None:
             error_type="VALIDATION_FAILED",
             error_message=f"Missing required fields in payload: {payload}",
         )
-        get_channel().basic_ack(delivery_tag=method.delivery_tag)
+        channel.basic_ack(delivery_tag=method.delivery_tag)
         return
 
     db = get_db()
@@ -58,7 +59,6 @@ def handle_scraping_job(payload: dict, method) -> None:
                 error_type=result.error_type or "UNKNOWN_ERROR",
                 error_message=result.error_message or "Scraping failed",
             )
-            get_channel().basic_ack(delivery_tag=method.delivery_tag)
             return
 
         content_id = contents_repo.save_raw_content(
@@ -105,7 +105,7 @@ def handle_scraping_job(payload: dict, method) -> None:
             error_message=str(e),
         )
     finally:
-        get_channel().basic_ack(delivery_tag=method.delivery_tag)
+        channel.basic_ack(delivery_tag=method.delivery_tag)
 
 
 def run():
