@@ -4,7 +4,7 @@ from src.shared.logger import get_logger
 
 logger = get_logger(__name__)
 
-_TIMEOUT = 60.0
+_TIMEOUT = 300.0  # phi3:mini no CPU pode levar 2-3 min na primeira inferência
 
 
 def call_ollama(prompt: str) -> str:

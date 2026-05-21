@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caminhões BPK — Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222536;
+      --border: #2e3147;
+      --text: #e2e4f0;
+      --muted: #7c7f9a;
+      --primary: #6c63ff;
+      --green: #22c55e;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      padding: 32px 24px;
+      line-height: 1.5;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .header-logo {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .header h1 { font-size: 22px; font-weight: 700; }
+    .header p { font-size: 13px; color: var(--muted); }
+    .badge-live {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: var(--green);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .dot-live {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.4); }
+    }
+
+    /* ── KPI Cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent, var(--primary));
+    }
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--accent, var(--primary));
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .kpi-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* ── Section ── */
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+
+    /* ── Protocol Cards ── */
+    .protocol-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .protocol-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .protocol-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .protocol-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .protocol-meta { flex: 1; min-width: 0; }
+    .protocol-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .protocol-number { font-size: 12px; color: var(--muted); font-family: monospace; }
+    .protocol-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .row-label { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+    .row-value { font-size: 13px; font-weight: 600; text-align: right; }
+
+    /* ── Tags ── */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .tag-green { background: rgba(34,197,94,0.15); color: var(--green); }
+    .tag-yellow { background: rgba(245,158,11,0.15); color: var(--yellow); }
+    .tag-red { background: rgba(239,68,68,0.15); color: var(--red); }
+    .tag-blue { background: rgba(59,130,246,0.15); color: var(--blue); }
+    .tag-purple { background: rgba(108,99,255,0.15); color: var(--primary); }
+
+    .divergence-banner {
+      margin: 0 20px 16px;
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--yellow);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Pipeline ── */
+    .pipeline {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 28px;
+    }
+    .pipeline-steps {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0;
+      margin-top: 16px;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      flex: 1;
+      min-width: 120px;
+    }
+    .step-icon { font-size: 18px; }
+    .step-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+    .step-value { font-size: 13px; font-weight: 700; }
+    .step-ok .step-value { color: var(--green); }
+    .step-ok { border-color: rgba(34,197,94,0.3); }
+    .step-arrow {
+      color: var(--muted);
+      font-size: 16px;
+      padding: 0 4px;
+      flex-shrink: 0;
+    }
+
+    /* ── RAG Section ── */
+    .rag-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+    .rag-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .rag-header h3 { font-size: 15px; font-weight: 700; }
+    .rag-form { padding: 16px 20px; display: flex; gap: 10px; border-bottom: 1px solid var(--border); }
+    .rag-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .rag-input:focus { border-color: var(--primary); }
+    .rag-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .rag-btn:hover { opacity: 0.85; }
+    .rag-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .rag-messages { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; min-height: 60px; }
+    .msg {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .msg-avatar {
+      width: 30px; height: 30px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .msg-user .msg-avatar { background: rgba(108,99,255,0.2); }
+    .msg-bot .msg-avatar { background: rgba(34,197,94,0.15); }
+    .msg-bubble {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      flex: 1;
+    }
+    .msg-user .msg-bubble { border-color: rgba(108,99,255,0.3); }
+    .msg-sources { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .source-chip {
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.25);
+      color: var(--blue);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+    .typing span {
+      width: 6px; height: 6px;
+      background: var(--muted);
+      border-radius: 50%;
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%,60%,100% { transform: translateY(0); }
+      30% { transform: translateY(-5px); }
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 8px;
+    }
+    .footer span { color: var(--primary); }
+
+    .error-msg { color: var(--red); font-size: 12px; padding: 8px 20px; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-logo">🚛</div>
+    <div>
+      <h1>Caminhões BPK</h1>
+      <p>Monitoramento de Protocolos</p>
+    </div>
+    <div class="badge-live">
+      <div class="dot-live"></div>
+      Sistema Online
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpi-grid">
+    <div class="kpi" style="--accent: var(--blue)">
+      <div class="kpi-value" id="kpi-projects">—</div>
+      <div class="kpi-label">Projetos</div>
+    </div>
+    <div class="kpi" style="--accent: var(--green)">
+      <div class="kpi-value" id="kpi-protocols">—</div>
+      <div class="kpi-label">Protocolos Ativos</div>
+    </div>
+    <div class="kpi" style="--accent: var(--yellow)">
+      <div class="kpi-value" id="kpi-divergences">—</div>
+      <div class="kpi-label">Divergências</div>
+    </div>
+    <div class="kpi" style="--accent: var(--primary)">
+      <div class="kpi-value" id="kpi-monitoring">—</div>
+      <div class="kpi-label">Monitorados</div>
+    </div>
+    <div class="kpi" style="--accent: var(--muted)">
+      <div class="kpi-value" id="kpi-lastrun" style="font-size:14px; padding-top:6px">—</div>
+      <div class="kpi-label">Último Scraping</div>
+    </div>
+  </div>
+
+  <!-- Pipeline -->
+  <p class="section-title">Pipeline de Extração</p>
+  <div class="pipeline">
+    <div class="pipeline-steps">
+      <div class="step step-ok">
+        <div class="step-icon">📡</div>
+        <div>
+          <div class="step-label">Scraping</div>
+          <div class="step-value">HTTP OK</div>
+        </div>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step step-ok">
+        <div class="step-icon">🧠</div>
+        <div>
+          <div class="step-label">AI / Ollama</div>
+          <div class="step-value">phi3:mini</div>
+        </div>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step step-ok">
+        <div class="step-icon">🗄️</div>
+        <div>
+          <div class="step-label">ChromaDB</div>
+          <div class="step-value">2 docs</div>
+        </div>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step step-ok">
+        <div class="step-icon">💬</div>
+        <div>
+          <div class="step-label">RAG</div>
+          <div class="step-value">Funcionando</div>
+        </div>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step step-ok">
+        <div class="step-icon">🔔</div>
+        <div>
+          <div class="step-label">Divergência</div>
+          <div class="step-value">Detectada</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Protocols -->
+  <p class="section-title">Protocolos</p>
+  <div class="protocol-grid" id="protocol-grid">
+    <div style="color:var(--muted); font-size:13px">Carregando...</div>
+  </div>
+
+  <!-- RAG Chat -->
+  <p class="section-title">Chat RAG — Pergunte sobre os protocolos</p>
+  <div class="rag-card">
+    <div class="rag-header">
+      <span style="font-size:20px">🤖</span>
+      <h3>Assistente BPK</h3>
+      <span class="tag tag-purple" style="margin-left:auto">phi3:mini + ChromaDB</span>
+    </div>
+    <div class="rag-form">
+      <input class="rag-input" id="rag-input" placeholder="Ex: qual o status da Copel? tem divergência?" onkeydown="if(event.key==='Enter') sendRAG()">
+      <button class="rag-btn" id="rag-btn" onclick="sendRAG()">Perguntar</button>
+    </div>
+    <div class="rag-messages" id="rag-messages">
+      <div class="msg msg-bot">
+        <div class="msg-avatar">🤖</div>
+        <div class="msg-bubble">Olá! Posso responder perguntas sobre os protocolos monitorados. Tente: <em>"qual é o status da Copel?"</em> ou <em>"tem alguma divergência?"</em></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Caminhões BPK · API <span>localhost:3000</span> · RAG timeout 120s
+  </div>
+
+  <script>
+    const API = 'http://localhost:3000';
+    let token = null;
+
+    async function login() {
+      const r = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'admin@empresa.com', password: 'change-me' })
+      });
+      const d = await r.json();
+      token = d.access_token;
+    }
+
+    function authHeaders() {
+      return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+    }
+
+    async function loadDashboard() {
+      await login();
+
+      // Summary
+      const summary = await fetch(`${API}/dashboard/summary`, { headers: authHeaders() }).then(r => r.json());
+      document.getElementById('kpi-projects').textContent = summary.total_projects ?? '—';
+      document.getElementById('kpi-protocols').textContent = summary.active_protocols ?? '—';
+      document.getElementById('kpi-divergences').textContent = summary.with_status_divergence ?? '—';
+      document.getElementById('kpi-monitoring').textContent = summary.monitoring_enabled ?? '—';
+      if (summary.last_scraping_run_at) {
+        const d = new Date(summary.last_scraping_run_at);
+        document.getElementById('kpi-lastrun').textContent =
+          d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
+          ' · ' + d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      }
+
+      // Projects + Protocols
+      const projects = await fetch(`${API}/projects`, { headers: authHeaders() }).then(r => r.json());
+      const grid = document.getElementById('protocol-grid');
+      grid.innerHTML = '';
+
+      for (const proj of projects) {
+        const protocols = await fetch(`${API}/projects/${proj.id}/protocols`, { headers: authHeaders() }).then(r => r.json());
+
+        for (const p of protocols) {
+          const stakeholders = await fetch(`${API}/stakeholders`, { headers: authHeaders() }).then(r => r.json());
+          const sh = stakeholders.find(s => s.id === p.stakeholder_id) || {};
+          const icon = sh.type === 'energy_company' ? '⚡' : sh.type === 'city_hall' ? '🏛️' : '🏢';
+          const iconBg = sh.type === 'energy_company' ? 'rgba(245,158,11,0.15)' : 'rgba(59,130,246,0.15)';
+
+          const statusMatch = p.manual_status === p.external_status;
+          const extTag = p.external_status
+            ? `<span class="tag ${statusMatch ? 'tag-green' : 'tag-red'}">${p.external_status}</span>`
+            : '<span class="tag tag-blue">Aguardando</span>';
+          const manTag = `<span class="tag tag-purple">${p.manual_status || '—'}</span>`;
+
+          const divergeBanner = p.has_divergence ? `
+            <div class="divergence-banner">
+              ⚠️ Divergência detectada: manual = <strong>${p.manual_status}</strong> · externo = <strong>${p.external_status}</strong>
+            </div>` : '';
+
+          const lastConsulted = p.last_consulted_at
+            ? new Date(p.last_consulted_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
+            : '—';
+
+          grid.innerHTML += `
+            <div class="protocol-card">
+              <div class="protocol-header">
+                <div class="protocol-icon" style="background:${iconBg}">${icon}</div>
+                <div class="protocol-meta">
+                  <div class="protocol-name">${sh.name || 'Stakeholder'}</div>
+                  <div class="protocol-number">${p.protocol_number}</div>
+                </div>
+                ${p.monitoring_enabled ? '<span class="tag tag-green">Monitorado</span>' : ''}
+              </div>
+              <div class="protocol-body">
+                <div class="row">
+                  <span class="row-label">Status manual</span>
+                  <span class="row-value">${manTag}</span>
+                </div>
+                <div class="row">
+                  <span class="row-label">Status externo</span>
+                  <span class="row-value">${extTag}</span>
+                </div>
+                ${p.external_situation ? `
+                <div class="row">
+                  <span class="row-label">Situação</span>
+                  <span class="row-value" style="font-size:11px; color:var(--muted); max-width:200px; text-align:right">${p.external_situation}</span>
+                </div>` : ''}
+                <div class="row">
+                  <span class="row-label">Atividade</span>
+                  <span class="row-value" style="font-size:11px; color:var(--muted)">${p.activity || '—'}</span>
+                </div>
+                <div class="row">
+                  <span class="row-label">CNPJ</span>
+                  <span class="row-value" style="font-size:11px; font-family:monospace; color:var(--muted)">${p.cnpj}</span>
+                </div>
+                <div class="row">
+                  <span class="row-label">Última consulta</span>
+                  <span class="row-value" style="font-size:11px; color:var(--muted)">${lastConsulted}</span>
+                </div>
+              </div>
+              ${divergeBanner}
+            </div>`;
+        }
+      }
+    }
+
+    async function sendRAG() {
+      const input = document.getElementById('rag-input');
+      const btn = document.getElementById('rag-btn');
+      const messages = document.getElementById('rag-messages');
+      const q = input.value.trim();
+      if (!q) return;
+
+      input.value = '';
+      btn.disabled = true;
+
+      // User bubble
+      messages.innerHTML += `
+        <div class="msg msg-user">
+          <div class="msg-avatar">👤</div>
+          <div class="msg-bubble">${escHtml(q)}</div>
+        </div>`;
+
+      // Typing indicator
+      const typingId = 'typing-' + Date.now();
+      messages.innerHTML += `
+        <div class="msg msg-bot" id="${typingId}">
+          <div class="msg-avatar">🤖</div>
+          <div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>
+        </div>`;
+      messages.scrollTop = messages.scrollHeight;
+
+      try {
+        if (!token) await login();
+        const resp = await fetch(`${API}/rag/query`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ question: q })
+        });
+        const data = await resp.json();
+
+        document.getElementById(typingId)?.remove();
+
+        const sources = (data.sources || []).map(s =>
+          `<span class="source-chip">${s.label}</span>`
+        ).join('');
+
+        messages.innerHTML += `
+          <div class="msg msg-bot">
+            <div class="msg-avatar">🤖</div>
+            <div class="msg-bubble">
+              ${escHtml(data.answer || 'Sem resposta.')}
+              ${sources ? `<div class="msg-sources">${sources}</div>` : ''}
+            </div>
+          </div>`;
+      } catch (e) {
+        document.getElementById(typingId)?.remove();
+        messages.innerHTML += `
+          <div class="msg msg-bot">
+            <div class="msg-avatar">🤖</div>
+            <div class="msg-bubble" style="color:var(--red)">Erro ao consultar o RAG: ${escHtml(e.message)}</div>
+          </div>`;
+      }
+
+      btn.disabled = false;
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

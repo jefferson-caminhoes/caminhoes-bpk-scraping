@@ -4,6 +4,16 @@ from bson import ObjectId
 from pymongo.collection import Collection
 
 
+def _oid(val):
+    """Converte string para ObjectId se necessário."""
+    if isinstance(val, ObjectId):
+        return val
+    try:
+        return ObjectId(str(val))
+    except Exception:
+        return val
+
+
 class ScrapedContentsRepository:
     def __init__(self, collection: Collection):
         self._col = collection
@@ -34,13 +44,13 @@ class ScrapedContentsRepository:
         return str(result.inserted_id)
 
     def get_by_id(self, content_id: str) -> dict[str, Any] | None:
-        return self._col.find_one({"_id": content_id})
+        return self._col.find_one({"_id": _oid(content_id)})
 
     def update_clean_text(
         self, content_id: str, clean_text: str, strategy: str
     ) -> None:
         self._col.update_one(
-            {"_id": content_id},
+            {"_id": _oid(content_id)},
             {
                 "$set": {
                     "clean_text": clean_text,

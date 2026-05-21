@@ -1,6 +1,17 @@
 from dataclasses import dataclass
+from bson import ObjectId
 from pymongo.database import Database
 from src.scraping.adapters.registry import get_adapter
+
+
+def _oid(val):
+    """Aceita string ou ObjectId — a API envia IDs como string no payload RabbitMQ."""
+    if isinstance(val, ObjectId):
+        return val
+    try:
+        return ObjectId(str(val))
+    except Exception:
+        return val
 
 
 @dataclass
@@ -12,6 +23,7 @@ class ScrapingTarget:
     cnpj: str | None
     stakeholder_name: str
     stakeholder_type: str
+    adapter_type: str
     requires_javascript: bool
     has_captcha: bool
     resolved_url: str
@@ -24,7 +36,7 @@ def fetch_scraping_target(
     stakeholder_id: str,
     job_id: str = "",
 ) -> ScrapingTarget:
-    protocol = db["protocols"].find_one({"_id": protocol_id})
+    protocol = db["protocols"].find_one({"_id": _oid(protocol_id)})
     if not protocol:
         raise ValueError(f"Protocol {protocol_id} not found")
 
@@ -35,7 +47,7 @@ def fetch_scraping_target(
     ):
         raise ValueError(f"Protocol {protocol_id} is not monitorable")
 
-    stakeholder = db["stakeholders"].find_one({"_id": stakeholder_id})
+    stakeholder = db["stakeholders"].find_one({"_id": _oid(stakeholder_id)})
     if not stakeholder:
         raise ValueError(f"Stakeholder {stakeholder_id} not found")
 
@@ -46,7 +58,8 @@ def fetch_scraping_target(
     if not template:
         raise ValueError(f"Stakeholder {stakeholder_id} has no query_url_template")
 
-    adapter = get_adapter(stakeholder.get("type", "default"))
+    adapter_key = stakeholder.get("adapter_type") or stakeholder.get("type", "default")
+    adapter = get_adapter(adapter_key)
     resolved_url = adapter.resolve_url(
         template=template,
         protocol_number=protocol.get("protocol_number", ""),
@@ -62,6 +75,7 @@ def fetch_scraping_target(
         cnpj=protocol.get("cnpj"),
         stakeholder_name=stakeholder.get("name", ""),
         stakeholder_type=stakeholder.get("type", "default"),
+        adapter_type=adapter_key,
         requires_javascript=stakeholder.get("requires_javascript", False),
         has_captcha=stakeholder.get("has_captcha", False),
         resolved_url=resolved_url,

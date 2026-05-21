@@ -4,6 +4,7 @@ from src.database.repositories.scraped_contents import ScrapedContentsRepository
 from src.database.repositories.consultation_jobs import ConsultationJobsRepository
 from src.queues.consumer import consume
 from src.queues.publisher import publish_message
+from src.scraping.adapters.registry import get_adapter
 from src.scraping.fetcher import fetch_scraping_target
 from src.scraping.http_scraper import scrape_url
 from src.shared.errors import publish_failure
@@ -41,7 +42,8 @@ def handle_scraping_job(payload: dict, method) -> None:
         target = fetch_scraping_target(db, protocol_id, stakeholder_id, job_id)
         logger.info(f"Scraping {target.resolved_url} for job {job_id}")
 
-        result = scrape_url(target.resolved_url)
+        adapter = get_adapter(target.adapter_type)
+        result = adapter.scrape(target) or scrape_url(target.resolved_url)
 
         if not result.success:
             jobs_repo.update_status(job_id, "failed")

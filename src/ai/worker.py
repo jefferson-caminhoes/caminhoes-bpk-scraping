@@ -1,5 +1,3 @@
-import httpx
-from src.config.settings import settings
 from src.database.client import get_db
 from src.database.repositories.scraped_contents import ScrapedContentsRepository
 from src.database.repositories.consultation_jobs import ConsultationJobsRepository
@@ -10,21 +8,11 @@ from src.cleaner.sufficiency_checker import is_sufficient
 from src.ai.ollama_client import call_ollama
 from src.ai.prompts import build_extraction_prompt, build_correction_prompt
 from src.ai.json_validator import extract_json_from_text, validate_extraction_result
+from src.shared.api_client import deliver_extraction_result
 from src.shared.errors import publish_failure
 from src.shared.logger import get_logger
 
 logger = get_logger(__name__)
-
-
-def _deliver_to_api(result_payload: dict) -> None:
-    if not settings.api_base_url or not settings.api_integration_token:
-        logger.warning("API delivery skipped: no API_BASE_URL or API_INTEGRATION_TOKEN")
-        return
-    url = f"{settings.api_base_url}/integrations/extraction-results"
-    headers = {"Authorization": f"Bearer {settings.api_integration_token}"}
-    response = httpx.post(url, json=result_payload, headers=headers, timeout=15.0)
-    response.raise_for_status()
-    logger.info(f"Result delivered to API for job {result_payload.get('job_id')}")
 
 
 def handle_ai_extraction_job(payload: dict, method) -> None:
@@ -98,7 +86,7 @@ def handle_ai_extraction_job(payload: dict, method) -> None:
         publish_message("ai.extraction.results", result_payload)
 
         try:
-            _deliver_to_api(result_payload)
+            deliver_extraction_result(result_payload)
         except Exception as e:
             logger.error(f"API delivery failed for job {job_id}: {e}")
             publish_failure(

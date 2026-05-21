@@ -8,6 +8,9 @@ EXTRACTION_SCHEMA = """{
   "observation": "string|null",
   "agency": "string|null",
   "oficio": "string|null",
+  "orders": [
+    {"sequence": number|null, "description": "string", "status": "string|null", "observation": "string|null"}
+  ],
   "confidence": number between 0.0 and 1.0,
   "error": null
 }"""
@@ -24,6 +27,8 @@ Regras obrigatórias:
 - Se o texto indicar que o protocolo não foi encontrado, use found=false.
 - Datas devem estar no formato YYYY-MM-DD quando possível.
 - O campo confidence deve ser um número entre 0 e 1.
+- Se o texto contiver lista de ordens/solicitações com status individuais, preencha o campo orders.
+- Se não houver ordens listadas, use orders=null. NUNCA crie entradas com description=null.
 
 Contexto da consulta:
 - Número do protocolo buscado: {protocol_number}

@@ -1,6 +1,24 @@
 version: "3.9"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Docker Compose centralizado — inclui infraestrutura, API e workers de scraping
+#
+# Uso:
+#   docker compose up -d                          # tudo
+#   docker compose up -d mongodb rabbitmq ollama  # só infra
+#   docker compose logs -f scraping-worker        # logs de um worker
+#
+# Pré-requisitos:
+#   1. Crie ../caminhoes-bpk-api/.env a partir de ../caminhoes-bpk-api/.env.example
+#   2. Ajuste JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD no bloco `api` abaixo
+#   3. Pull do modelo Ollama após o primeiro `up`:
+#      docker compose exec ollama ollama pull phi3:mini
+# ─────────────────────────────────────────────────────────────────────────────
+
 services:
+
+  # ── Infraestrutura ────────────────────────────────────────────────────────
+
   mongodb:
     image: mongo:7.0
     ports:
@@ -14,18 +32,134 @@ services:
     image: rabbitmq:3.13-management
     ports:
       - "5672:5672"
-      - "15672:15672"
+      - "15672:15672"      # management UI
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   chromadb:
     image: chromadb/chroma:latest
     ports:
-      - "8000:8000"
+      - "8001:8000"         # 8001 externo para não colidir com API
     volumes:
       - chroma_data:/chroma/chroma
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # GPU support (NVIDIA) — remova o bloco deploy se não tiver GPU ou der erro:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # ── API Backend ───────────────────────────────────────────────────────────
+
+  api:
+    build:
+      context: ../caminhoes-bpk-api
+    ports:
+      - "3000:8000"
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/caminhoes_bpk
+      MONGODB_DATABASE: caminhoes_bpk
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      CHROMA_HOST: chromadb
+      CHROMA_PORT: "8000"       # porta interna do container chromadb
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: phi3:mini
+      # ⚠️  Troque antes de ir para produção:
+      JWT_SECRET: dev-secret-change-me
+      JWT_EXPIRES_MINUTES: "1440"
+      ADMIN_EMAIL: admin@empresa.com
+      ADMIN_PASSWORD: change-me
+      STAKEHOLDER_SECRET_KEY: ""
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      mongodb:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ── Workers de Scraping ───────────────────────────────────────────────────
+  # Compartilham a mesma imagem — o CMD é sobrescrito por serviço.
+
+  scraping-worker:
+    build: .
+    command: python -m src.main scraping
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/caminhoes_bpk
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      API_BASE_URL: http://api:8000
+      API_ADMIN_EMAIL: admin@empresa.com
+      API_ADMIN_PASSWORD: change-me
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: phi3:mini
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      api:
+        condition: service_started
+    restart: unless-stopped
+
+  ai-worker:
+    build: .
+    command: python -m src.main ai
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/caminhoes_bpk
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      API_BASE_URL: http://api:8000
+      API_ADMIN_EMAIL: admin@empresa.com
+      API_ADMIN_PASSWORD: change-me
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: phi3:mini
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      ollama:
+        condition: service_started
+      api:
+        condition: service_started
+    restart: unless-stopped
+
+  scheduler:
+    build: .
+    command: python -m src.main scheduler
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/caminhoes_bpk
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      API_BASE_URL: http://api:8000
+      API_ADMIN_EMAIL: admin@empresa.com
+      API_ADMIN_PASSWORD: change-me
+      SCRAPING_CRON: "*/30 * * * *"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    restart: unless-stopped
 
 volumes:
   mongo_data:
   chroma_data:
+  ollama_data:
