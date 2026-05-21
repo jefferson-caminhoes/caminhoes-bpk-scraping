@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Resultado - Copel Protocolo 20264129470402</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 860px; margin: 40px auto; background: #f5f5f5; color: #222; }
+  h1 { color: #004b87; border-bottom: 3px solid #004b87; padding-bottom: 10px; }
+  h2 { color: #333; margin-top: 30px; }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+  .badge-green  { background: #d4edda; color: #155724; }
+  .badge-yellow { background: #fff3cd; color: #856404; }
+  .badge-red    { background: #f8d7da; color: #721c24; }
+  .badge-grey   { background: #e2e3e5; color: #383d41; }
+  .card { background: #fff; border-radius: 8px; padding: 20px 24px; margin: 16px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .field { display: flex; gap: 12px; margin: 8px 0; font-size: 15px; }
+  .field label { font-weight: bold; min-width: 180px; color: #555; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th { background: #004b87; color: #fff; padding: 10px 14px; text-align: left; }
+  td { padding: 10px 14px; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  .pipeline-steps { display: flex; gap: 0; margin: 20px 0; }
+  .step { flex: 1; text-align: center; padding: 10px; border: 1px solid #b2dfb2; font-size: 13px; }
+  .step.ok  { background: #d4edda; border-color: #c3e6cb; }
+  .step.err { background: #f8d7da; border-color: #f5c6cb; }
+  .step:not(:last-child) { border-right: none; }
+  .step span { display: block; font-size: 20px; }
+  .obs { background: #fff8e1; border-left: 4px solid #ffc107; padding: 10px 16px; border-radius: 0 6px 6px 0; margin-top: 12px; font-size: 14px; color: #555; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+  .highlight-row td { background: #fff8e1 !important; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>🔍 Resultado do Pipeline — Copel</h1>
+
+<div class="card">
+  <h2>📋 Dados da Consulta</h2>
+  <div class="field"><label>Protocolo:</label><span><strong>20264129470402</strong></span></div>
+  <div class="field"><label>CNPJ:</label><span>00.000.000/0001-00</span></div>
+  <div class="field"><label>Stakeholder:</label><span>Copel — Companhia Paranaense de Energia</span></div>
+  <div class="field"><label>URL consultada:</label><span style="font-size:13px">https://www.copel.com/slwweb/publico/acompanhamento/inicio.jsf</span></div>
+  <div class="field"><label>Método de scraping:</label><span>JSF POST + AJAX rowSelect por ordem</span></div>
+</div>
+
+<div class="card">
+  <h2>⚙️ Passos do Pipeline</h2>
+  <div class="pipeline-steps">
+    <div class="step ok"><span>✅</span>Scraping<br>HTTP 200</div>
+    <div class="step ok"><span>✅</span>Limpeza<br>379 chars</div>
+    <div class="step ok"><span>✅</span>Suficiência<br>OK</div>
+    <div class="step ok"><span>✅</span>IA (phi3:mini)<br>JSON válido</div>
+    <div class="step ok"><span>✅</span>Validação<br>Pydantic OK</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📊 Ordens do Protocolo</h2>
+  <p>Resultado retornado pela Copel — ordens geradas conforme andamento do serviço:</p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:60px">#</th>
+        <th>Descrição da Ordem</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="highlight-row">
+        <td>1</td>
+        <td>PEDIDO ENCAMINHADO P/ ATENDIMENTO</td>
+        <td><span class="badge badge-yellow">Em andamento</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="obs">
+    ℹ️ Este protocolo possui uma ordem ativa com status <strong>Em andamento</strong>, indicando que o pedido foi encaminhado para atendimento e ainda está sendo processado pela Copel.
+  </div>
+</div>
+
+<div class="card">
+  <h2>🤖 JSON Extraído pela IA</h2>
+  <p>Saída do modelo <strong>phi3:mini</strong> após extração e validação Pydantic:</p>
+  <pre>{
+  "found": true,
+  "protocol_number": "20264129470402",
+  "cnpj": "00.000.000/0001-00",
+  "external_status": null,
+  "external_situation": null,
+  "last_movement_date": null,
+  "observation": null,
+  "agency": null,
+  "oficio": null,
+  "orders": [
+    {
+      "sequence": 1,
+      "description": "PEDIDO ENCAMINHADO P/ ATENDIMENTO",
+      "status": "Em andamento",
+      "observation": null
+    }
+  ],
+  "confidence": 0.95,
+  "error": null
+}</pre>
+</div>
+
+<div class="card">
+  <h2>📝 Texto limpo enviado para a IA</h2>
+  <p>Saída do <code>html_cleaner</code> antes da extração:</p>
+  <pre>Protocolo: 20264129470402
+Stakeholder: Copel
+Ordens do protocolo:
+Sequencia: 1
+Descricao: PEDIDO ENCAMINHADO P/ ATENDIMENTO
+Status: Em andamento
+Situação do serviço
+O protocolo informado é um serviço de falta de energia (sem luz). Você será redirecionado para a página específica.
+O número do serviço inicia-se pelo ano 2022, 2023, 2024,... e mais 10 dígitos. Ex: 20231234567890.</pre>
+</div>
+
+<div class="card" style="background:#e8f4e8; border-left: 4px solid #28a745;">
+  <h2>✅ Resultado</h2>
+  <p><strong>Pipeline funcionando corretamente.</strong></p>
+  <p>
+    Protocolo <code>20264129470402</code> encontrado na Copel com <strong>1 ordem</strong>:<br><br>
+    • <strong>PEDIDO ENCAMINHADO P/ ATENDIMENTO</strong> → <span class="badge badge-yellow">Em andamento</span>
+  </p>
+  <p style="font-size:14px; color:#555; margin-top:12px;">
+    Comparado ao protocolo anterior (<code>20245757138534</code>), este tem apenas uma ordem ativa em vez de duas concluídas.
+  </p>
+</div>
+
+</body>
+</html>

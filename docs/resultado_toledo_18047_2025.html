@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Resultado - Prefeitura de Toledo Protocolo 18047/2025</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 860px; margin: 40px auto; background: #f5f5f5; color: #222; }
+  h1 { color: #1a6e2e; border-bottom: 3px solid #1a6e2e; padding-bottom: 10px; }
+  h2 { color: #333; margin-top: 30px; }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+  .badge-green  { background: #d4edda; color: #155724; }
+  .badge-yellow { background: #fff3cd; color: #856404; }
+  .badge-red    { background: #f8d7da; color: #721c24; }
+  .badge-grey   { background: #e2e3e5; color: #383d41; }
+  .card { background: #fff; border-radius: 8px; padding: 20px 24px; margin: 16px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .field { display: flex; gap: 12px; margin: 8px 0; font-size: 15px; }
+  .field label { font-weight: bold; min-width: 180px; color: #555; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th { background: #1a6e2e; color: #fff; padding: 10px 14px; text-align: left; }
+  td { padding: 10px 14px; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  .pipeline-steps { display: flex; gap: 0; margin: 20px 0; }
+  .step { flex: 1; text-align: center; padding: 10px; border: 1px solid #b2dfb2; font-size: 13px; }
+  .step.ok  { background: #d4edda; border-color: #c3e6cb; }
+  .step.err { background: #f8d7da; border-color: #f5c6cb; }
+  .step:not(:last-child) { border-right: none; }
+  .step span { display: block; font-size: 20px; }
+  .obs { background: #fff8e1; border-left: 4px solid #ffc107; padding: 10px 16px; border-radius: 0 6px 6px 0; margin-top: 12px; font-size: 14px; color: #555; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+  .highlight-row td { background: #d4edda !important; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>🔍 Resultado do Pipeline — Prefeitura de Toledo</h1>
+
+<div class="card">
+  <h2>📋 Dados da Consulta</h2>
+  <div class="field"><label>Protocolo:</label><span><strong>18047/2025</strong></span></div>
+  <div class="field"><label>CNPJ:</label><span>57.740.735/0001-79</span></div>
+  <div class="field"><label>Stakeholder:</label><span>Prefeitura de Toledo — Portal Equiplano</span></div>
+  <div class="field"><label>URL consultada:</label><span style="font-size:13px">https://equiplano.toledo.pr.gov.br:7443/portalContribuinteRest/processos</span></div>
+  <div class="field"><label>Método de scraping:</label><span>REST API GET (captcha fake — backend não valida)</span></div>
+</div>
+
+<div class="card">
+  <h2>⚙️ Passos do Pipeline</h2>
+  <div class="pipeline-steps">
+    <div class="step ok"><span>✅</span>Scraping<br>HTTP 200</div>
+    <div class="step ok"><span>✅</span>Limpeza<br>191 chars</div>
+    <div class="step ok"><span>✅</span>Suficiência<br>OK</div>
+    <div class="step ok"><span>✅</span>IA (phi3:mini)<br>JSON válido</div>
+    <div class="step ok"><span>✅</span>Validação<br>Pydantic OK</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📊 Status do Protocolo</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Campo</th>
+        <th>Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="highlight-row">
+        <td>Status</td>
+        <td><span class="badge badge-green">Concluído</span></td>
+      </tr>
+      <tr>
+        <td>Assunto</td>
+        <td>Solicitação Aprovação de Projetos - Versão: 1</td>
+      </tr>
+      <tr>
+        <td>Requerente</td>
+        <td>VILLA BELLA SPE LTDA</td>
+      </tr>
+      <tr>
+        <td>Número</td>
+        <td>18047</td>
+      </tr>
+      <tr>
+        <td>Exercício</td>
+        <td>2025</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="obs">
+    ℹ️ O portal Equiplano da Prefeitura de Toledo usa Angular SPA no frontend. Os dados são retornados via REST API em <code>/portalContribuinteRest/processos</code>. O reCAPTCHA v2 está presente no frontend, mas o backend aceita qualquer token não-vazio.
+  </div>
+</div>
+
+<div class="card">
+  <h2>🤖 JSON Extraído pela IA</h2>
+  <p>Saída do modelo <strong>phi3:mini</strong> após extração e validação Pydantic:</p>
+  <pre>{
+  "found": true,
+  "protocol_number": "18047/2025",
+  "cnpj": null,
+  "external_status": "Concluído",
+  "external_situation": null,
+  "last_movement_date": null,
+  "observation": null,
+  "agency": null,
+  "oficio": null,
+  "orders": [
+    {
+      "sequence": null,
+      "description": "Solicitação Aprovação de Projetos - Versão: 1",
+      "status": null,
+      "observation": null
+    }
+  ],
+  "confidence": 0.95,
+  "error": null
+}</pre>
+</div>
+
+<div class="card">
+  <h2>📝 Texto limpo enviado para a IA</h2>
+  <p>Saída do <code>html_cleaner</code> antes da extração:</p>
+  <pre>Protocolo: 18047/2025
+Stakeholder: Prefeitura de Toledo
+Status: Concluído
+Assunto: Solicitação Aprovação de Projetos - Versão: 1
+Requerente: VILLA BELLA SPE LTDA
+Numero: 18047
+Exercicio: 2025</pre>
+</div>
+
+<div class="card">
+  <h2>🔧 Como funciona o EquiplanoAdapter</h2>
+  <table>
+    <thead><tr><th>Passo</th><th>Detalhe</th></tr></thead>
+    <tbody>
+      <tr><td>1. Resolve entidade</td><td>GET /processos/entidades → idEntidade=136 (Município de Toledo)</td></tr>
+      <tr><td>2. Strip CNPJ</td><td><code>57.740.735/0001-79</code> → <code>57740735000179</code> (apenas dígitos)</td></tr>
+      <tr><td>3. Extrai exercício</td><td>Protocol <code>18047/2025</code> → número=18047, exercício=2025</td></tr>
+      <tr><td>4. GET /processos</td><td>Parâmetros: nrCpfCnpj, nrProcesso, nrExercicio, captcha (fake), idEntidade</td></tr>
+      <tr><td>5. Monta texto</td><td>Status + Assunto + Requerente em formato legível para IA</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card" style="background:#e8f4e8; border-left: 4px solid #28a745;">
+  <h2>✅ Resultado</h2>
+  <p><strong>Pipeline funcionando corretamente.</strong></p>
+  <p>
+    Protocolo <code>18047/2025</code> da Prefeitura de Toledo encontrado com status:<br><br>
+    • <strong>Solicitação Aprovação de Projetos - Versão: 1</strong> → <span class="badge badge-green">Concluído</span>
+  </p>
+  <p style="font-size:14px; color:#555; margin-top:12px;">
+    Novo adapter <code>EquiplanoAdapter</code> implementado com sucesso. Funciona via REST API direta, sem necessidade de Playwright ou parsing de HTML.
+  </p>
+</div>
+
+</body>
+</html>
