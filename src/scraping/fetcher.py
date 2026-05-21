@@ -79,5 +79,9 @@ def fetch_scraping_target(
         requires_javascript=stakeholder.get("requires_javascript", False),
         has_captcha=stakeholder.get("has_captcha", False),
         resolved_url=resolved_url,
-        registry_office_number=protocol.get("registry_office_number"),
+        registry_office_number=(
+            protocol.get("registry_office_number")
+            or protocol.get("serventia")
+            or protocol.get("oficio")
+        ),
     )

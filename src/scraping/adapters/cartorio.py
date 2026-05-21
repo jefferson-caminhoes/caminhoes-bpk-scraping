@@ -29,15 +29,15 @@ _TIPO = "1"  # 1 = Registro/Averbação
 
 def _normalize_serventia(name: str) -> str:
     """Normaliza nome para comparação tolerante a acentos e símbolos."""
-    return (
-        name.lower()
-        .replace("º", "o")
-        .replace("°", "o")
-        .replace("ª", "a")
-        .replace("1o", "1 o")
-        .replace("  ", " ")
-        .strip()
-    )
+    import re
+    import unicodedata
+    # NFKD: decompõe acentos e mapeia ordinais (º→o, ª→a)
+    nfkd = unicodedata.normalize("NFKD", name)
+    ascii_str = nfkd.encode("ascii", "ignore").decode("ascii")
+    result = ascii_str.lower().replace("-", " ")
+    # Remove sufixo ordinal 'o' ou 'a' colado em dígito (ex: "1o" → "1", "2a" → "2")
+    result = re.sub(r"(\d)[oa](?=\s|$)", r"\1", result)
+    return " ".join(result.split())
 
 
 class CartorioAdapter(BaseAdapter):
