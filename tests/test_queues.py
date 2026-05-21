@@ -51,3 +51,25 @@ def test_publish_message_calls_basic_publish():
     assert args["routing_key"] == "scraping.jobs"
     body = json.loads(args["body"])
     assert body["job_id"] == "j1"
+
+
+def test_publish_failure_sends_to_failed_jobs():
+    import json
+    from unittest.mock import MagicMock, patch
+    mock_channel = MagicMock()
+    with patch("src.queues.publisher.get_channel", return_value=mock_channel):
+        from src.shared.errors import publish_failure
+        publish_failure(
+            job_id="job_1",
+            protocol_id="prot_1",
+            stage="scraping",
+            error_type="SCRAPING_TIMEOUT",
+            error_message="Timeout ao consultar site",
+        )
+
+    mock_channel.basic_publish.assert_called_once()
+    args = mock_channel.basic_publish.call_args[1]
+    assert args["routing_key"] == "failed.jobs"
+    body = json.loads(args["body"])
+    assert body["error_type"] == "SCRAPING_TIMEOUT"
+    assert body["stage"] == "scraping"
