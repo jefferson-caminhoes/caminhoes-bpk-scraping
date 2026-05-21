@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     api_admin_password: str = "change-me"
     stakeholder_secret_key: str = ""
     ollama_url: str = "http://localhost:11434"
-    ollama_model: str = "phi3:mini"
+    ollama_model: str = "llama3.2:3b"
     scraping_cron: str = "*/30 * * * *"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

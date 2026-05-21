@@ -66,9 +66,28 @@ def analyze_url(url: str) -> SiteProbe:
 
     data = extract_json_from_text(raw_response)
 
-    data.setdefault("original_url", url)
-    data.setdefault("base_url", _extract_base_url(actual_url))
+    # Always use the real extracted values — don't trust the model for these
+    data["original_url"] = url
+    data["base_url"] = _extract_base_url(actual_url)
     data["analyzed_at"] = datetime.now(timezone.utc).isoformat()
+
+    # Fill missing root fields with safe defaults
+    data.setdefault("portal_type", "unknown")
+    data.setdefault("auth_required", False)
+    data.setdefault("captcha_detected", False)
+    data.setdefault("confidence", 0.5)
+    data.setdefault("notes", "")
+
+    # Normalize extract rules: some models output ["viewstate"] instead of [{"name":...}]
+    for step in data.get("steps", []):
+        normalized = []
+        for rule in step.get("extract") or []:
+            if isinstance(rule, str):
+                # shorthand: "viewstate" → full ExtractRule
+                normalized.append({"name": rule, "selector": rule, "attribute": "value"})
+            else:
+                normalized.append(rule)
+        step["extract"] = normalized
 
     probe = SiteProbe(**data)
     logger.info(

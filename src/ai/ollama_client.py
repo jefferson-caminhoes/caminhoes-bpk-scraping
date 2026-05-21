@@ -14,7 +14,7 @@ def call_ollama(prompt: str) -> str:
         "model": settings.ollama_model,
         "messages": [{"role": "user", "content": prompt}],
         "stream": False,
-        "options": {"temperature": 0.1},
+        "options": {"temperature": 0.1, "num_predict": 2048},
     }
     response = httpx.post(url, json=payload, timeout=_TIMEOUT)
     response.raise_for_status()

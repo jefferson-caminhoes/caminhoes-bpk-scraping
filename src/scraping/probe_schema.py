@@ -50,13 +50,14 @@ class SiteProbe(BaseModel):
     portal_type: PortalType
     original_url: str
     base_url: str
-    auth_required: bool
-    captcha_detected: bool
+    # Defaults allow LLM to omit fields without breaking validation
+    auth_required: bool = False
+    captcha_detected: bool = False
     # URL da página de login, se auth_required=True
     login_url: str | None = None
-    steps: list[ProbeStep]
+    steps: list[ProbeStep] = Field(default_factory=list)
     # 0.0–1.0: confiança da IA na receita gerada
-    confidence: float = Field(ge=0.0, le=1.0)
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
     # Explicação da IA sobre o que encontrou
-    notes: str
+    notes: str = ""
     analyzed_at: str | None = None
