@@ -2,10 +2,12 @@ from src.scraping.adapters.base import BaseAdapter
 from src.scraping.adapters.default_http import DefaultHttpAdapter
 from src.scraping.adapters.copel import CopelAdapter
 from src.scraping.adapters.equiplano import EquiplanoAdapter
+from src.scraping.adapters.cartorio import CartorioAdapter
 
 _registry: dict[str, BaseAdapter] = {
     "copel": CopelAdapter(),
     "equiplano_toledo": EquiplanoAdapter(entity_hint="toledo"),
+    "cartorio": CartorioAdapter(),
 }
 _default = DefaultHttpAdapter()
 
