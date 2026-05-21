@@ -1,5 +1,3 @@
-version: "3.9"
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Docker Compose centralizado — inclui infraestrutura, API e workers de scraping
 #

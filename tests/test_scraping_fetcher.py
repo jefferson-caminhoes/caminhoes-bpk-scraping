@@ -42,6 +42,33 @@ def test_fetch_scraping_target_returns_target():
     assert "12345" in target.resolved_url
 
 
+def test_fetch_scraping_target_infers_copel_adapter_from_url():
+    mock_db = _make_mock_db(
+        protocol={
+            "_id": "prot_1",
+            "protocol_number": "20245757138534",
+            "cnpj": "57.740.735/0001-79",
+            "monitoring_enabled": True,
+            "active": True,
+            "closed_manually": False,
+            "stakeholder_id": "stake_1",
+        },
+        stakeholder={
+            "_id": "stake_1",
+            "name": "copel",
+            "query_url_template": "https://www.copel.com/slwweb/publico/acompanhamento/inicio.jsf",
+            "requires_javascript": False,
+            "has_captcha": False,
+            "type": "empresa",
+            "active": True,
+        },
+    )
+
+    target = fetch_scraping_target(mock_db, "prot_1", "stake_1")
+
+    assert target.adapter_type == "copel"
+
+
 def test_fetch_raises_if_protocol_not_monitorable():
     mock_db = _make_mock_db(
         protocol={

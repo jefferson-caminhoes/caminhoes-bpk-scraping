@@ -8,6 +8,7 @@ from src.cleaner.sufficiency_checker import is_sufficient
 from src.ai.ollama_client import call_ollama
 from src.ai.prompts import build_extraction_prompt, build_correction_prompt
 from src.ai.json_validator import extract_json_from_text, validate_extraction_result
+from src.ai.deterministic_extractors import try_extract_deterministic
 from src.shared.api_client import deliver_extraction_result
 from src.shared.errors import publish_failure
 from src.shared.logger import get_logger
@@ -55,23 +56,30 @@ def handle_ai_extraction_job(payload: dict, method) -> None:
         protocol = db["protocols"].find_one({"_id": protocol_id}) or {}
         stakeholder = db["stakeholders"].find_one({"_id": stakeholder_id}) or {}
 
-        prompt = build_extraction_prompt(
+        data = try_extract_deterministic(
+            stakeholder=stakeholder,
             clean_text=clean_text,
             protocol_number=protocol.get("protocol_number", ""),
             cnpj=protocol.get("cnpj"),
-            stakeholder_name=stakeholder.get("name", ""),
         )
+        if data is None:
+            prompt = build_extraction_prompt(
+                clean_text=clean_text,
+                protocol_number=protocol.get("protocol_number", ""),
+                cnpj=protocol.get("cnpj"),
+                stakeholder_name=stakeholder.get("name", ""),
+            )
 
-        raw_response = call_ollama(prompt)
+            raw_response = call_ollama(prompt)
 
-        # Try to parse, with one correction retry
-        try:
-            data = extract_json_from_text(raw_response)
-        except ValueError:
-            logger.warning(f"First parse failed for job {job_id}, retrying with correction prompt")
-            correction_prompt = build_correction_prompt(raw_response)
-            raw_response = call_ollama(correction_prompt)
-            data = extract_json_from_text(raw_response)  # Raises if still fails
+            # Try to parse, with one correction retry
+            try:
+                data = extract_json_from_text(raw_response)
+            except ValueError:
+                logger.warning(f"First parse failed for job {job_id}, retrying with correction prompt")
+                correction_prompt = build_correction_prompt(raw_response)
+                raw_response = call_ollama(correction_prompt)
+                data = extract_json_from_text(raw_response)  # Raises if still fails
 
         result = validate_extraction_result(data)
         jobs_repo.update_status(job_id, "ai_completed")

@@ -30,6 +30,21 @@ class ScrapingTarget:
     registry_office_number: str | None = None
 
 
+def _infer_adapter_key(stakeholder: dict) -> str:
+    explicit = stakeholder.get("adapter_type")
+    if explicit:
+        return explicit
+
+    fallback = stakeholder.get("type", "default")
+    haystack = " ".join(
+        str(stakeholder.get(key) or "")
+        for key in ("name", "query_url_template", "type")
+    ).lower()
+    if "copel" in haystack:
+        return "copel"
+    return fallback
+
+
 def fetch_scraping_target(
     db: Database,
     protocol_id: str,
@@ -58,7 +73,7 @@ def fetch_scraping_target(
     if not template:
         raise ValueError(f"Stakeholder {stakeholder_id} has no query_url_template")
 
-    adapter_key = stakeholder.get("adapter_type") or stakeholder.get("type", "default")
+    adapter_key = _infer_adapter_key(stakeholder)
     adapter = get_adapter(adapter_key)
     resolved_url = adapter.resolve_url(
         template=template,
