@@ -20,6 +20,8 @@ def _make_target(protocol_number="12345", cnpj="12.345.678/0001-99"):
         requires_javascript=False,
         has_captcha=False,
         resolved_url="https://portal.com",
+        credential_username="",
+        credential_password="",
     )
 
 
@@ -185,3 +187,60 @@ def test_dynamic_adapter_two_step_with_viewstate(mock_client_cls):
 
     post_call = mock_client.post.call_args
     assert post_call[1]["data"]["javax.faces.ViewState"] == "VS_TOKEN_XYZ"
+
+
+@patch("src.scraping.adapters.dynamic.httpx.Client")
+def test_dynamic_adapter_interpolates_credentials(mock_client_cls):
+    probe = SiteProbe(
+        portal_type="post_form",
+        original_url="https://portal.com/login",
+        base_url="https://portal.com",
+        auth_required=True,
+        captcha_detected=False,
+        login_url="https://portal.com/login",
+        steps=[
+            ProbeStep(
+                step=1,
+                type="post",
+                url="{base_url}/login",
+                form_data={
+                    "username": "{credential_username}",
+                    "password": "{credential_password}",
+                },
+            ),
+            ProbeStep(
+                step=2,
+                type="get",
+                url="{base_url}/consulta?protocolo={protocol_number}",
+                is_result_step=True,
+                result_selector="div#resultado",
+            ),
+        ],
+        confidence=0.9,
+        notes="Portal com login",
+    )
+
+    mock_resp1 = MagicMock(text="<html><body>ok</body></html>", status_code=200)
+    mock_resp2 = MagicMock(
+        text='<html><body><div id="resultado">Status: Em análise</div></body></html>',
+        status_code=200,
+    )
+
+    mock_client = MagicMock()
+    mock_client.__enter__ = MagicMock(return_value=mock_client)
+    mock_client.__exit__ = MagicMock(return_value=False)
+    mock_client.post.return_value = mock_resp1
+    mock_client.get.return_value = mock_resp2
+    mock_client_cls.return_value = mock_client
+
+    adapter = DynamicAdapter(probe)
+    target = _make_target()
+    target.credential_username = "portal-user"
+    target.credential_password = "portal-pass"
+
+    result = adapter.scrape(target)
+
+    assert result.success is True
+    post_call = mock_client.post.call_args
+    assert post_call[1]["data"]["username"] == "portal-user"
+    assert post_call[1]["data"]["password"] == "portal-pass"

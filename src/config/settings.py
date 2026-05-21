@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     # Credenciais do admin da API para obter JWT automaticamente
     api_admin_email: str = "admin@empresa.com"
     api_admin_password: str = "change-me"
+    stakeholder_secret_key: str = ""
     ollama_url: str = "http://localhost:11434"
     ollama_model: str = "phi3:mini"
     scraping_cron: str = "*/30 * * * *"

@@ -3,6 +3,7 @@ from bson import ObjectId
 from pymongo.database import Database
 from src.scraping.adapters.registry import get_adapter
 from src.scraping.probe_schema import SiteProbe
+from src.shared.secrets import decrypt_secret
 
 
 def _oid(val):
@@ -30,6 +31,8 @@ class ScrapingTarget:
     resolved_url: str
     registry_office_number: str | None = None
     site_probe: SiteProbe | None = None
+    credential_username: str | None = None
+    credential_password: str | None = None
 
 
 def _infer_adapter_key(stakeholder: dict) -> str:
@@ -110,4 +113,8 @@ def fetch_scraping_target(
             or protocol.get("oficio")
         ),
         site_probe=site_probe,
+        credential_username=(stakeholder.get("auth") or {}).get("username"),
+        credential_password=decrypt_secret(
+            ((stakeholder.get("auth") or {}).get("password_encrypted"))
+        ),
     )

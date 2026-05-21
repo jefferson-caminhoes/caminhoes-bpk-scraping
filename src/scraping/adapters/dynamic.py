@@ -115,8 +115,8 @@ class DynamicAdapter(BaseAdapter):
             "protocol_number": target.protocol_number or "",
             "cnpj": target.cnpj or "",
             "registry_office_number": getattr(target, "registry_office_number", "") or "",
-            "credential_username": "",
-            "credential_password": "",
+            "credential_username": getattr(target, "credential_username", "") or "",
+            "credential_password": getattr(target, "credential_password", "") or "",
         }
 
         try:

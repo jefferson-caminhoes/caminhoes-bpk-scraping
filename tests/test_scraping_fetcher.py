@@ -199,3 +199,36 @@ def test_fetch_scraping_target_ignores_invalid_site_probe():
     target = fetch_scraping_target(mock_db, "prot_1", "stake_1")
 
     assert target.site_probe is None
+
+
+def test_fetch_scraping_target_loads_decrypted_credentials():
+    mock_db = _make_mock_db(
+        protocol={
+            "_id": "prot_1",
+            "protocol_number": "12345",
+            "cnpj": "12.345.678/0001-99",
+            "monitoring_enabled": True,
+            "active": True,
+            "closed_manually": False,
+            "stakeholder_id": "stake_1",
+        },
+        stakeholder={
+            "_id": "stake_1",
+            "name": "Portal Privado",
+            "query_url_template": "https://portal.gov.br/consulta?p={protocol_number}",
+            "requires_javascript": False,
+            "has_captcha": False,
+            "type": "default",
+            "active": True,
+            "auth": {
+                "type": "form_login",
+                "username": "demo-user",
+                "password_encrypted": "gAAAAABqD0cf9gZ7jK3qWWk9LaCAaC4vrROftwmrp2I2bLHFJ5UQpHkGjSqq8yMeXePlmdujcUV6W3HaNg8FS7xIQ4LyRzxbTQ==",
+            },
+        },
+    )
+
+    target = fetch_scraping_target(mock_db, "prot_1", "stake_1")
+
+    assert target.credential_username == "demo-user"
+    assert target.credential_password == "secret"

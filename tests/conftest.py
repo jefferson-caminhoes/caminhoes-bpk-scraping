@@ -1,4 +1,7 @@
+import os
 import pytest
+
+os.environ.setdefault("STAKEHOLDER_SECRET_KEY", "Wbgx1J2YbEe59DQUK48hoAahWi8iKfGQ2vPGw4UEbSw=")
 
 PROTOCOL_NOT_FOUND_HTML = """
 <html><head><title>Consulta</title></head>
