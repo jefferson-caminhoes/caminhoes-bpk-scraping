@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from src.scraping.adapters.base import BaseAdapter
 from src.scraping.probe_schema import SiteProbe, ProbeStep
 from src.scraping.http_scraper import ScrapeResult, _HEADERS, _TIMEOUT
+from src.scraping.fetcher import ScrapingTarget
 from src.shared.logger import get_logger
 
 logger = get_logger(__name__)
@@ -29,17 +30,18 @@ def _execute_step(
     context: dict[str, str],
 ) -> tuple[str, dict[str, str]]:
     url = _interpolate(step.url, context)
+    merged_headers = {**_HEADERS, **step.headers}  # Merge step headers over base headers
 
     if step.type == "get":
-        response = client.get(url, headers=step.headers)
+        response = client.get(url, headers=merged_headers)
     elif step.type == "post":
         form = _interpolate_dict(step.form_data, context)
-        response = client.post(url, data=form, headers=step.headers)
+        response = client.post(url, data=form, headers=merged_headers)
     elif step.type == "post_json":
         body_str = json.dumps(step.json_body or {})
         body_str = _interpolate(body_str, context)
         body = json.loads(body_str)
-        response = client.post(url, json=body, headers=step.headers)
+        response = client.post(url, json=body, headers=merged_headers)
     else:
         raise ValueError(f"DynamicAdapter: tipo de passo desconhecido: {step.type}")
 
@@ -52,6 +54,7 @@ def _execute_step(
             el = soup.find("input", {"name": "javax.faces.ViewState"})
             value = el.get("value", "") if el else ""
         elif rule.selector.startswith("json_path:"):
+            # Only supports flat single-level path (e.g., $.campo). Nested paths not supported.
             path = rule.selector[len("json_path:"):]
             try:
                 data = response.json()
@@ -96,7 +99,7 @@ class DynamicAdapter(BaseAdapter):
     ) -> str:
         return self._probe.base_url
 
-    def scrape(self, target) -> ScrapeResult:
+    def scrape(self, target: ScrapingTarget) -> ScrapeResult:
         if self._probe.captcha_detected:
             return ScrapeResult(
                 success=False,
@@ -163,6 +166,8 @@ class DynamicAdapter(BaseAdapter):
                 error_type="SITE_UNAVAILABLE",
                 error_message=str(e),
             )
+        except ValueError:
+            raise
         except Exception as e:
             logger.exception(f"DynamicAdapter unexpected error: {e}")
             return ScrapeResult(

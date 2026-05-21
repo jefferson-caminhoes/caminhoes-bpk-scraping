@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock
 from src.scraping.adapters.dynamic import DynamicAdapter, _interpolate, _execute_step
 from src.scraping.probe_schema import SiteProbe, ProbeStep, ExtractRule
 from src.scraping.fetcher import ScrapingTarget
+from src.scraping.http_scraper import _HEADERS
 
 
 def _make_target(protocol_number="12345", cnpj="12.345.678/0001-99"):
@@ -86,7 +87,7 @@ def test_dynamic_adapter_scrape_simple_get(mock_client_cls):
     assert "Concluído" in result.raw_html
     mock_client.get.assert_called_once_with(
         "https://portal.com/consulta?protocolo=12345",
-        headers={},
+        headers=_HEADERS,
     )
 
 
